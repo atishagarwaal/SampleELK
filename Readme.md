@@ -1,6 +1,6 @@
-<img width="148" height="23" alt="image" src="https://github.com/user-attachments/assets/bb2d138a-6520-4c98-8295-abb49942948d" /># 📘 End-to-End Logging with .NET, Kafka (KRaft), and ELK (Elasticsearch, Logstash, Kibana)
+📘 End-to-End Logging with .NET, Kafka (KRaft), and ELK (Elasticsearch, Logstash, Kibana)
 
-## 1. Introduction
+## Introduction
 
 Modern applications generate large volumes of logs that need to be centralized, structured, and visualized for monitoring and troubleshooting.  
 
@@ -18,7 +18,7 @@ The entire stack runs locally with:
 
 ---
 
-## 2. Architecture Overview
+## Architecture Overview
 
 ```
 .NET App → Kafka (KRaft) → Logstash → Elasticsearch → Kibana
@@ -30,8 +30,39 @@ The entire stack runs locally with:
 - **Kibana:** User-friendly UI for dashboards, visualizations, and querying logs.  
 
 ---
+## Overview
+This repository contains a small .NET worker that produces structured JSON log events and publishes them to a Kafka topic. The sample demonstrates how to build a local observability pipeline using Kafka (KRaft mode) as the transport and the ELK stack (Logstash → Elasticsearch → Kibana) for ingestion, storage and visualization.
 
-## 3. Step 1: Run Kafka in KRaft Mode
+Project structure and important files
+
+- `SampleELK/Program.cs` — host setup, DI registration and Kafka producer registration.
+- `SampleELK/Worker.cs` — BackgroundService that creates a small log event, serializes it to JSON and produces to Kafka.
+- `SampleELK/KafkaConfig.cs` — POCO carrying Kafka settings (BootstrapServers, Topic, ClientId).
+- `SampleELK/appsettings.json` — default configuration used by the app.
+
+Configuration (`appsettings.json`)
+
+Default file (`SampleELK/appsettings.json`) contains:
+
+```json
+{
+  "Kafka": {
+    "BootstrapServers": "localhost:9093",
+    "Topic": "app-logs",
+    "ClientId": "ElasticLogEvent"
+  }
+}
+```
+
+Change `BootstrapServers` to match your local Kafka instance and `Topic` if you want a different topic.
+
+How the code uses configuration
+
+- `Program.cs` reads Kafka settings into `KafkaConfig` and registers an `IProducer<Null, string>` using Confluent.Kafka.
+- `Worker.cs` consumes `IConfiguration` and the injected producer; it serializes events using `System.Text.Json` and calls `ProduceAsync(topic, message)`.
+
+
+## Step 1: Run Kafka in KRaft Mode
 
 Run Kafka in KRaft mode using Docker (no ZooKeeper required):
 
@@ -59,7 +90,7 @@ docker run --network host -it --rm bashj79/kafka-kraft /bin/bash -c "/opt/kafka/
 
 ---
 
-## 4. Step 2: Install ELK Stack Locally
+## Step 2: Install ELK Stack Locally
 
 Download and install the following individually from Elastic Downloads:
 
@@ -69,9 +100,9 @@ Download and install the following individually from Elastic Downloads:
 
 ---
 
-## 5. Step 3: Configure Logstash
+## Step 3: Configure Logstash
 
-### 5.1 Enable config file reading in `logstash.yml` under `logstash/config/`:
+### Enable config file reading in `logstash.yml` under `logstash/config/`:
 
 ```yaml
 path.config: "C:/Program Files/logstash-9.1.2/config/logstash.conf"
@@ -79,7 +110,7 @@ config.reload.automatic: true
 log.level: debug
 ```
 
-### 5.2 Create a pipeline config file `logstash.conf` under `logstash/config/`:
+### Create a pipeline config file `logstash.conf` under `logstash/config/`:
 
 ```conf
 input {
@@ -112,7 +143,7 @@ output {
 **Notes:**  
 Use your generated Elasticsearch `elastic` user credentials.  
 
-### 5.3 Run Logstash:
+### Run Logstash:
 
 ```bash
 ./bin/logstash -f
@@ -120,7 +151,7 @@ Use your generated Elasticsearch `elastic` user credentials.
 
 ---
 
-## 6. Configure Kibana
+## Configure Kibana
 
 ```yaml
 elasticsearch.hosts: [https://localhost:9200]
@@ -148,7 +179,7 @@ xpack.encryptedSavedObjects.encryptionKey: "your_encryption_key"
 
 ---
 
-## 7. Run ELK in Admin Mode
+## Run ELK in Admin Mode
 
 - **Elasticsearch → start with:**
 
@@ -174,15 +205,15 @@ Default: http://localhost:5601
 
 ---
 
-## 8. Emit Logs from .NET Application
+## Emit Logs from .NET Application
 
 *(Add structured JSON logs into Kafka from your .NET app.)*
 
 ---
 
-## 9. Verify the Pipeline
+## Verify the Pipeline
 
-### 9.1 Verify in Elasticsearch  
+### Verify in Elasticsearch  
 
 Check indices created by Logstash:
 
@@ -196,7 +227,7 @@ You should see an index like:
 yellow open app-logs-2025.08.25 ...
 ```
 
-### 9.2 Verify in Kibana  
+### Verify in Kibana  
 
 1. Open http://localhost:5601  
 2. Go to **Stack Management → Data Views → Create Data View**  
@@ -207,7 +238,7 @@ yellow open app-logs-2025.08.25 ...
 
 ---
 
-## 10. Summary
+## Summary
 
 You now have a complete observability pipeline:
 

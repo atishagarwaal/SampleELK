@@ -9,7 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace ElasticLogEvent
+namespace SampleELK
 {
     /// <summary>
     /// A background service that generates and sends log events to Kafka.

@@ -1,5 +1,5 @@
 ﻿using Confluent.Kafka;
-using ElasticLogEvent;
+using SampleELK;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
